@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estado del Bastón</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <h1>Estado del Bastón Inteligente</h1>
+
+  <div class="status-container">
+    <div class="status-card">
+      <h2>Sensor de Proximidad</h2>
+      <p id="proximidad">Cargando...</p>
+    </div>
+    <div class="status-card">
+      <h2>Botón SOS</h2>
+      <p id="sos">Cargando...</p>
+    </div>
+    <div class="status-card">
+      <h2>Batería</h2>
+      <p id="bateria">Cargando...</p>
+    </div>
+    <div class="status-card">
+      <h2>Conectividad</h2>
+      <p id="conexion">Cargando...</p>
+    </div>
+  </div>
+
+  <button onclick="obtenerEstado()">Actualizar</button>
+  <script src="estado.js"></script>
+</body>
+</html>

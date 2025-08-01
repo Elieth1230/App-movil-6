@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Dispositivos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/estilo.css" />
+</head>
+<body style="margin:0;padding:0;">
+  <div style="display:flex;flex-direction:column;min-height:100vh;">
+    <!-- Barra superior con botones -->
+    
+    <!-- Contenido principal -->
+    <div id="main-content" style="flex:1 1 auto;overflow:auto;position:relative;">
+      <button id="btn-regresar-Ini" class="btn-salir-flotante">← Salir</button>
+
+      <div style="margin-top: 60px; padding: 20px;">
+        <h2 id="main-title">Dispositivo <span id="nombre-dispositivo"></span></h2>
+        <div class="seccion-scroll" id="seccion-dispositivos">
+          <!-- Botones de dispositivos -->
+        </div>
+        
+      
+        <div class="detalle-extra">
+          <button id="chequeo-dispositivo" class="chequeo-dispositivo">Chequeo de dispositivo</button>
+
+            <p><strong>Batería:</strong> <span id="detalle-bateria"></span></p>
+          <p><strong>Estado de Buzzer:</strong> <span id="detalle-estado_buzzer"></span></p>
+          <p><strong>Estado sensor ultrasonico:</strong> <span id="detalle-estado_ultra"></span></p>
+          
+
+
+
+          <div id="detalle-map" class="detalle-map"></div>
+
+          <div id="detalle-map-history" class="detalle-map-history"></div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-container">
+      <button id="btn-dispositivos" class="nav-btn back-btn">← Regresar</button>
+      <button id="btn-mapa1" class="nav-btn">📍 Tu Ubicación</button>
+      <button id="btn-mapa2" class="nav-btn">🗺️ Tu Recorrido</button>
+    </div>
+    <!-- Iframe central para mostrar los mapas en pantalla completa -->
+    <iframe id="iframe-maps" src="maps.html" style="width:100%;height:calc(100vh - 60px);border:none;display:none;"></iframe>
+    
+  </div>
+  <script src="js/talkback.js"></script>
+  <script src="js/dispositivos.js"></script>
+  <script>
+    // Verificar autenticación al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+      checkAuthSession();
+    });
+
+    function checkAuthSession() {
+      const userSession = localStorage.getItem('userSession');
+      
+      if (!userSession) {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      try {
+        const session = JSON.parse(userSession);
+        const now = new Date().getTime();
+        const sessionExpiry = new Date(session.expiry).getTime();
+        
+        if (now > sessionExpiry) {
+          localStorage.removeItem('userSession');
+          localStorage.removeItem('rememberMe');
+          window.location.href = 'login.html';
+          return;
+        }
+      } catch (error) {
+        console.error('Error al verificar sesión:', error);
+        localStorage.removeItem('userSession');
+        localStorage.removeItem('rememberMe');
+        window.location.href = 'login.html';
+        return;
+      }
+    }
+
+    const btnMapa1 = document.getElementById('btn-mapa1');
+    const btnMapa2 = document.getElementById('btn-mapa2');
+    const btnDispositivos = document.getElementById('btn-dispositivos');
+    const iframeMaps = document.getElementById('iframe-maps');
+    const mainContent = document.getElementById('main-content');
+    
+    // Cargar datos del dispositivo desde localStorage
+    function cargarDatosDispositivo() {
+      const nombreDispositivo = localStorage.getItem('nombreDispositivo');
+      const bateriaDispositivo = localStorage.getItem('bateriaDispositivo');
+      const sensoresDispositivo = localStorage.getItem('sensoresDispositivo');
+      
+      if (nombreDispositivo) {
+        document.getElementById('nombre-dispositivo').textContent = nombreDispositivo;
+        document.getElementById('detalle-nombre').textContent = nombreDispositivo;
+      }
+      
+      if (bateriaDispositivo) {
+        document.getElementById('detalle-bateria').textContent = bateriaDispositivo + '%';
+      }
+      
+      if (sensoresDispositivo) {
+        document.getElementById('detalle-estado_ultra').textContent = sensoresDispositivo;
+        document.getElementById('detalle-estado_buzzer').textContent = sensoresDispositivo;
+      }
+    }
+    
+    // Función para mostrar mapa en pantalla completa
+    function mostrarMapa(src, botonActivo, botonInactivo1, botonInactivo2) {
+      iframeMaps.src = src;
+      iframeMaps.style.display = 'block';
+      mainContent.style.display = 'none';
+      
+      // Aplicar clases CSS
+      botonActivo.className = 'nav-btn active';
+      botonInactivo1.className = 'nav-btn inactive';
+      botonInactivo2.className = 'nav-btn inactive';
+      btnDispositivos.className = 'nav-btn back-btn back-active';
+    }
+    
+    // Función para mostrar contenido principal
+    function mostrarContenidoPrincipal() {
+      iframeMaps.style.display = 'none';
+      mainContent.style.display = 'block';
+      
+      // Resetear clases CSS
+      btnMapa1.className = 'nav-btn';
+      btnMapa2.className = 'nav-btn';
+      btnDispositivos.className = 'nav-btn back-btn';
+    }
+    
+    // Event listeners para los botones
+    btnMapa1.addEventListener('click', function() {
+      mostrarMapa('maps.html', btnMapa1, btnMapa2, btnDispositivos);
+    });
+    
+    btnMapa2.addEventListener('click', function() {
+      mostrarMapa('maps2.html', btnMapa2, btnMapa1, btnDispositivos);
+    });
+    
+    btnDispositivos.addEventListener('click', mostrarContenidoPrincipal);
+
+    //Boton para regresar al inicio 
+    const btnRegresarIni = document.getElementById('btn-regresar-Ini');
+    btnRegresarIni.addEventListener('click', function() {
+      window.location.href = 'index.html'; 
+    });
+    
+    // Doble click en cualquier botón para volver al contenido principal
+    btnMapa1.addEventListener('dblclick', mostrarContenidoPrincipal);
+    btnMapa2.addEventListener('dblclick', mostrarContenidoPrincipal);
+    
+    // Escuchar mensajes de los iframes para regresar a dispositivos
+    window.addEventListener('message', function(event) {
+      if (event.data === 'regresarDispositivos') {
+        mostrarContenidoPrincipal();
+      }
+    });
+    
+    // Estado inicial - mostrar contenido principal y cargar datos del dispositivo
+    mostrarContenidoPrincipal();
+    cargarDatosDispositivo();
+  </script>
+</body>
+</html>

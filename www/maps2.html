@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recorrido - Historial de Rutas</title>
+    <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+    <div class="map-header">🗺️ Historial de Recorridos</div>
+    
+    <div id="info" style="padding: 12px 20px; background: rgba(255,255,255,0.95); text-align: center; font-size: 0.9em; color: #333; font-weight: 500;">
+        <span id="route-info">Cargando historial de rutas...</span>
+    </div>
+    
+    <div id="map-history" style="height: calc(100vh - 140px); width: 100vw;"></div>
+    
+    <div class="history-controls">
+        <button class="history-btn clear" onclick="limpiarHistorial()">🗑️ Limpiar</button>
+        <button class="history-btn save" onclick="actualizarMapa()">🔄 Actualizar</button>
+    </div>
+
+    <script>
+        var mapHistory, polyline, markers = [];
+        
+        function initMap() {
+            var defaultCenter = { lat: 19.432608, lng: -99.133209 }; // CDMX por defecto
+            
+            mapHistory = new google.maps.Map(document.getElementById('map-history'), {
+                center: defaultCenter,
+                zoom: 13,
+                mapTypeId: 'roadmap',
+                streetViewControl: false,
+                fullscreenControl: false
+            });
+            
+            limpiarHistorialSiEsNuevoDia();
+            mostrarRecorridoDelDia();
+        }
+
+        function mostrarRecorridoDelDia() {
+            // Limpiar elementos anteriores
+            if (polyline) polyline.setMap(null);
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+            
+            var hoy = new Date().toISOString().slice(0, 10);
+            var key = 'recorrido_' + hoy;
+            var recorrido = JSON.parse(localStorage.getItem(key) || '[]');
+            
+            var infoElement = document.getElementById('route-info');
+            
+            if (recorrido.length === 0) {
+                infoElement.textContent = 'No hay recorrido registrado para hoy. Usa el mapa principal para registrar tu ubicación.';
+                mapHistory.setCenter({ lat: 19.432608, lng: -99.133209 });
+                return;
+            }
+            
+            if (recorrido.length === 1) {
+                infoElement.textContent = `1 punto registrado hoy (${new Date(recorrido[0].t).toLocaleTimeString()})`;
+                var punto = { lat: recorrido[0].lat, lng: recorrido[0].lng };
+                mapHistory.setCenter(punto);
+                
+                // Agregar marcador para el único punto
+                var marker = new google.maps.Marker({
+                    position: punto,
+                    map: mapHistory,
+                    title: `Ubicación: ${new Date(recorrido[0].t).toLocaleTimeString()}`,
+                    icon: {
+                        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="red"><circle cx="12" cy="12" r="10"/></svg>'),
+                        scaledSize: new google.maps.Size(12, 12)
+                    }
+                });
+                markers.push(marker);
+                return;
+            }
+            
+            // Mostrar ruta completa
+            var path = recorrido.map(p => ({lat: p.lat, lng: p.lng}));
+            
+            polyline = new google.maps.Polyline({
+                path: path,
+                geodesic: true,
+                strokeColor: '#4285F4',
+                strokeOpacity: 1.0,
+                strokeWeight: 4
+            });
+            polyline.setMap(mapHistory);
+            
+            // Marcador de inicio (verde)
+            var startMarker = new google.maps.Marker({
+                position: path[0],
+                map: mapHistory,
+                title: `Inicio: ${new Date(recorrido[0].t).toLocaleTimeString()}`,
+                icon: {
+                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="green"><circle cx="12" cy="12" r="10"/></svg>'),
+                    scaledSize: new google.maps.Size(12, 12)
+                }
+            });
+            markers.push(startMarker);
+            
+            // Marcador de fin (rojo)
+            var endMarker = new google.maps.Marker({
+                position: path[path.length - 1],
+                map: mapHistory,
+                title: `Último: ${new Date(recorrido[recorrido.length - 1].t).toLocaleTimeString()}`,
+                icon: {
+                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="red"><circle cx="12" cy="12" r="10"/></svg>'),
+                    scaledSize: new google.maps.Size(12, 12)
+                }
+            });
+            markers.push(endMarker);
+            
+            // Centrar el mapa en la ruta
+            var bounds = new google.maps.LatLngBounds();
+            path.forEach(point => bounds.extend(point));
+            mapHistory.fitBounds(bounds);
+            
+            // Información de la ruta
+            var inicio = new Date(recorrido[0].t).toLocaleTimeString();
+            var fin = new Date(recorrido[recorrido.length - 1].t).toLocaleTimeString();
+            infoElement.textContent = `${recorrido.length} puntos registrados (${inicio} - ${fin})`;
+        }
+
+        function limpiarHistorialSiEsNuevoDia() {
+            var hoy = new Date().toISOString().slice(0, 10);
+            var key = 'recorrido_' + hoy;
+            var keys = Object.keys(localStorage);
+            keys.forEach(function(k) {
+                if (k.startsWith('recorrido_') && k !== key) {
+                    localStorage.removeItem(k);
+                }
+            });
+        }
+        
+        function limpiarHistorial() {
+            if (confirm('¿Estás seguro de que quieres eliminar todo el historial de rutas?')) {
+                var hoy = new Date().toISOString().slice(0, 10);
+                var key = 'recorrido_' + hoy;
+                localStorage.removeItem(key);
+                mostrarRecorridoDelDia();
+            }
+        }
+        
+        function actualizarMapa() {
+            mostrarRecorridoDelDia();
+        }
+    </script>
+    <!-- API de Google Maps -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDPn7ufBV8nVIAKNS6LaS4fjdylKxWeEOs&callback=initMap" async defer></script>
+</body>
+</html>

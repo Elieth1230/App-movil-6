@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.miempresa.proyecto6" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Proyecto6</name>
+    <description>App para bastones inteligentes con mapa</description>
+    <author email="dev@cordova.apache.org" href="https://cordova.apache.org">
+    Eliezer Zuriel
+  </author>
+    <content src="splash.html" />
+    <access origin="*" />
+    <allow-navigation href="*" />
+    <allow-navigation href="http://192.168.4.1/*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    
+    <!-- Google Maps API Key (requerido por el plugin) -->
+    <preference name="GOOGLE_MAPS_ANDROID_API_KEY" value="AIzaSyDPn7ufBV8nVIAKNS6LaS4fjdylKxWeEOs" />
+    
+    <!-- Android Configuration -->
+    <preference name="android-minSdkVersion" value="23" />
+    <preference name="android-targetSdkVersion" value="31" />
+    <preference name="android-compileSdkVersion" value="35" />
+    <platform name="android">
+        <edit-config file="AndroidManifest.xml" mode="merge" target="uses-permission">
+            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+        </edit-config>
+        <edit-config file="AndroidManifest.xml" mode="merge" target="uses-permission">
+            <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+        </edit-config>
+        <edit-config file="AndroidManifest.xml" mode="merge" target="uses-permission">
+            <uses-permission android:name="android.permission.INTERNET" />
+        </edit-config>
+        <edit-config file="AndroidManifest.xml" mode="merge" target="uses-permission">
+            <uses-permission android:name="android.permission.CALL_PHONE" />
+        </edit-config>
+    </platform>
+</widget>

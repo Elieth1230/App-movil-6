@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Login - Smart Cane</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/estilo.css" />
+  <link rel="stylesheet" href="css/login.css" />
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="logo-section">
+        <img src="img/ClearPath.jpeg" alt="Smart Cane Logo" class="login-logo">
+        <h2>Smart Cane</h2>
+        <p>Sistema de gestión inteligente</p>
+      </div>
+
+      <!-- Formulario de Login -->
+      <div id="login-form" class="form-container">
+        <h3>Iniciar Sesión</h3>
+        <form id="loginForm">
+          <div class="input-group">
+            <input type="email" id="loginEmail" placeholder="Correo electrónico" required />
+            <span class="error-message" id="loginEmailError"></span>
+          </div>
+          <div class="input-group">
+            <input type="password" id="loginPassword" placeholder="Contraseña" required />
+            <span class="error-message" id="loginPasswordError"></span>
+          </div>
+          <div class="remember-section">
+            <label class="checkbox-container">
+              <input type="checkbox" id="rememberMe">
+              <span class="checkmark"></span>
+              Recordar sesión
+            </label>
+          </div>
+          <button type="submit" class="login-btn">Iniciar Sesión</button>
+        </form>
+        <div class="form-footer">
+          <p>¿No tienes cuenta? <a href="#" id="showRegister">Regístrate aquí</a></p>
+          <p><a href="#" id="forgotPassword">¿Olvidaste tu contraseña?</a></p>
+        </div>
+      </div>
+
+      <!-- Formulario de Registro -->
+      <div id="register-form" class="form-container" style="display: none;">
+        <h3>Crear Cuenta</h3>
+        <form id="registerForm">
+          <div class="input-group">
+            <input type="text" id="registerName" placeholder="Nombre completo" required />
+            <span class="error-message" id="registerNameError"></span>
+          </div>
+          <div class="input-group">
+            <input type="email" id="registerEmail" placeholder="Correo electrónico" required />
+            <span class="error-message" id="registerEmailError"></span>
+          </div>
+          <div class="input-group">
+            <input type="tel" id="registerPhone" placeholder="Teléfono" required />
+            <span class="error-message" id="registerPhoneError"></span>
+          </div>
+          <div class="input-group">
+            <input type="password" id="registerPassword" placeholder="Contraseña" required />
+            <span class="error-message" id="registerPasswordError"></span>
+          </div>
+          <div class="input-group">
+            <input type="password" id="confirmPassword" placeholder="Confirmar contraseña" required />
+            <span class="error-message" id="confirmPasswordError"></span>
+          </div>
+          <div class="terms-section">
+            <label class="checkbox-container">
+              <input type="checkbox" id="acceptTerms" required>
+              <span class="checkmark"></span>
+              Acepto los <a href="#" id="showTerms">términos y condiciones</a>
+            </label>
+          </div>
+          <button type="submit" class="register-btn">Crear Cuenta</button>
+        </form>
+        <div class="form-footer">
+          <p>¿Ya tienes cuenta? <a href="#" id="showLogin">Inicia sesión aquí</a></p>
+        </div>
+      </div>
+
+      <!-- Loader -->
+      <div id="login-loader" class="loader-container" style="display: none;">
+        <div class="loader"></div>
+        <p>Iniciando sesión...</p>
+      </div>
+
+      <!-- Mensaje de éxito -->
+      <div id="success-message" class="success-container" style="display: none;">
+        <div class="success-icon">✅</div>
+        <h3>¡Bienvenido!</h3>
+        <p>Redirigiendo a la aplicación...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de términos y condiciones -->
+  <div class="modal" id="terms-modal">
+    <div class="modal-content">
+      <span class="close-modal" id="close-terms">&times;</span>
+      <h3>Términos y Condiciones</h3>
+      <div class="terms-content">
+        <h4>1. Uso de la Aplicación</h4>
+        <p>Esta aplicación está diseñada para ayudar en la gestión de dispositivos de asistencia para personas con discapacidad visual.</p>
+        
+        <h4>2. Privacidad de Datos</h4>
+        <p>Sus datos personales serán protegidos y utilizados únicamente para el funcionamiento de la aplicación.</p>
+        
+        <h4>3. Responsabilidades del Usuario</h4>
+        <p>El usuario es responsable de mantener la confidencialidad de su cuenta y contraseña.</p>
+        
+        <h4>4. Limitaciones de Responsabilidad</h4>
+        <p>La aplicación se proporciona "tal como está" sin garantías de ningún tipo.</p>
+      </div>
+      <button class="accept-terms-btn" id="accept-terms-btn">Aceptar</button>
+    </div>
+  </div>
+
+  <script src="js/talkback.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

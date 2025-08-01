@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Gestión de Bastones y Dispositivos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/estilo.css" />
+</head>
+<body>
+  <!-- Contenido principal -->
+  <div id="contenido-app">
+    <!-- Barra superior con usuario y cerrar sesión -->
+    <div class="user-bar">
+      <div class="user-info">
+        <span class="user-welcome">Bienvenido, <span id="userName">Usuario</span></span>
+      </div>
+      <button class="logout-btn" id="logoutBtn">Cerrar Sesión</button>
+    </div>
+
+    <div class="main-section-container">
+      <h2>INICIO</h2>
+    </div>
+    <div class="main-section-container">
+      <h2>Agregar contacto</h2>
+      <div class="scroll-section" id="contactos-section">
+        <button class="add-btn" id="add-contacto">+</button>
+        <ul class="lista-contactos" id="listaContactos"></ul>
+      </div>
+    </div>
+    <div class="main-section-container">
+      <h2>Añadir dispositivo</h2>
+      <div class="scroll-section" id="bastones-section">
+        <button class="add-btn" id="add-baston">+</button>
+        <div id="lista-bastones"></div>
+      </div>
+    </div>
+
+    <!-- Apartado  de contacto -->
+    <div class="modal" id="modal-contacto">
+      <div class="modal-content">
+        <span class="close-modal" id="cerrar-modal-contacto">&times;</span>
+        <h3>Nuevo Contacto</h3>
+        <form id="contactForm">
+          <input type="text" id="nombre" placeholder="Nombre" required />
+          <input type="text" id="apellido" placeholder="Apellido" required />
+          <input type="text" id="relacion" placeholder="Relación" required />
+          <input type="tel" id="telefono" placeholder="Teléfono" required />
+          <button type="submit">Guardar contacto</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Apartado de bastón -->
+    <div class="modal" id="modal-baston">
+      <div class="modal-content">
+        <span class="close-modal" id="cerrar-modal-baston">&times;</span>
+        <h3>Nuevo Bastón</h3>
+        <form id="form-configuracion">
+          <input type="text" id="nombre-baston" placeholder="Nombre del bastón" required />
+          <input type="text" id="ssid" placeholder="WiFi SSID" required />
+          <input type="password" id="password" placeholder="Contraseña WiFi" required />
+          <button type="submit">Guardar bastón</button>
+        </form>
+        <div id="loader-vincular" style="display:none; margin: 30px 0;">
+          <div class="loader"></div>
+          <div style="margin-top:10px; color:#888;">Vinculando con el bastón...</div>
+        </div>
+        <div id="vincular-exito" style="display:none; margin: 30px 0;">
+          <div style="font-size: 3em; color: #4caf50;">✅</div>
+          <div style="margin-top:10px; color:#4caf50; font-weight:bold;">¡Conexión exitosa!</div>
+        </div>
+      </div>
+    </div>
+
+    
+
+  <script src="js/talkback.js"></script>
+  <script src="js/index.js"></script>
+  <script src="js/contactos.js"></script>
+</body>
+</html>
