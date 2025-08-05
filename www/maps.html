@@ -40,72 +40,181 @@
             marker = new google.maps.Marker({
                 position: defaultCenter,
                 map: map,
-                title: 'Ubicación inicial'
+                title: 'Ubicación inicial',
+                draggable: false
+            });
+            
+            // Agregar info window para mostrar estado
+            var infoWindow = new google.maps.InfoWindow({
+                content: 'Obteniendo ubicación...'
             });
             
             // Verificar permisos primero
             verificarPermisos();
             
-            // Intentar obtener ubicación después de un pequeño delay
-            setTimeout(setUserLocation, 1000);
+            // Intentar obtener ubicación inmediatamente
+            obtenerUbicacionConFallback();
             
-            document.getElementById('btn-location').addEventListener('click', setUserLocation);
+            document.getElementById('btn-location').addEventListener('click', function() {
+                infoWindow.setContent('Actualizando ubicación...');
+                infoWindow.open(map, marker);
+                obtenerUbicacionConFallback();
+            });
+        }
+
+        // Función mejorada para obtener ubicación con múltiples intentos
+        function obtenerUbicacionConFallback() {
+            console.log('Iniciando obtención de ubicación...');
+            
+            if (!navigator.geolocation) {
+                console.error('Geolocalización no soportada');
+                mostrarError('Geolocalización no soportada por este dispositivo');
+                return;
+            }
+
+            // Configuración más agresiva para ubicación real
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 60000,  // 60 segundos
+                maximumAge: 0,   // Sin caché
+                // Opciones específicas de Cordova
+                frequency: 1000,
+                enableLocationManager: true
+            };
+
+            console.log('Usando configuración agresiva para ubicación real');
+            
+            // Usar watchPosition para mejor precisión
+            const watchId = navigator.geolocation.watchPosition(
+                function(position) {
+                    navigator.geolocation.clearWatch(watchId);
+                    console.log('Ubicación obtenida:', position);
+                    
+                    // Verificar calidad de la ubicación
+                    if (position.coords.accuracy > 1000) {
+                        console.warn('Precisión muy baja, reintentando...');
+                        // Si la precisión es muy mala, intentar de nuevo
+                        setTimeout(obtenerUbicacionConFallback, 2000);
+                        return;
+                    }
+                    
+                    actualizarMapa(position);
+                },
+                function(error) {
+                    navigator.geolocation.clearWatch(watchId);
+                    console.error('Error obtención de ubicación:', error);
+                    manejarErrorGeolocation(error);
+                },
+                options
+            );
+        }
+
+        function usarCordovaGeolocation() {
+            // Usar el plugin de Cordova para mejor precisión
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    console.log('Ubicación obtenida via Cordova:', position);
+                    actualizarMapa(position);
+                },
+                function(error) {
+                    console.error('Error Cordova geolocation:', error);
+                    // Fallback a navegador
+                    usarNavegadorGeolocation();
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 30000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        function usarNavegadorGeolocation() {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    console.log('Ubicación obtenida via navegador:', position);
+                    actualizarMapa(position);
+                },
+                function(error) {
+                    console.error('Error navegador geolocation:', error);
+                    manejarErrorGeolocation(error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 20000,
+                    maximumAge: 60000
+                }
+            );
+        }
+
+        function actualizarMapa(position) {
+            var userPos = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            
+            console.log('Actualizando mapa con posición:', userPos);
+            
+            map.setCenter(userPos);
+            marker.setPosition(userPos);
+            marker.setTitle(`Tu ubicación actual (Precisión: ${Math.round(position.coords.accuracy)}m)`);
+            
+            // Mostrar info window con detalles
+            var infoContent = `
+                <div>
+                    <strong>Ubicación actual</strong><br>
+                    Lat: ${userPos.lat.toFixed(6)}<br>
+                    Lng: ${userPos.lng.toFixed(6)}<br>
+                    Precisión: ${Math.round(position.coords.accuracy)}m
+                </div>
+            `;
+            
+            var infoWindow = new google.maps.InfoWindow({
+                content: infoContent
+            });
+            infoWindow.open(map, marker);
+            
+            guardarUbicacion(userPos);
+        }
+
+        function manejarErrorGeolocation(error) {
+            var errorMsg = '';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMsg = 'Permisos de ubicación denegados. Ve a Configuración > Apps > Proyecto6 > Permisos y habilita la Ubicación.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMsg = 'Información de ubicación no disponible. Verifica que el GPS esté activado y que tengas señal.';
+                    break;
+                case error.TIMEOUT:
+                    errorMsg = 'Tiempo de espera agotado. Verifica tu conexión y el GPS.';
+                    break;
+                default:
+                    errorMsg = 'Error desconocido al obtener ubicación.';
+                    break;
+            }
+            mostrarError(errorMsg);
+        }
+
+        function mostrarError(mensaje) {
+            console.error('Error geolocalización:', mensaje);
+            alert(mensaje);
+            
+            // Mostrar ubicación por defecto
+            var fallbackPos = { lat: 19.432608, lng: -99.133209 };
+            map.setCenter(fallbackPos);
+            marker.setPosition(fallbackPos);
+            marker.setTitle('Ubicación por defecto (CDMX) - Error en geolocalización');
+            
+            var infoWindow = new google.maps.InfoWindow({
+                content: '<div><strong>Ubicación por defecto</strong><br>No se pudo obtener ubicación real</div>'
+            });
+            infoWindow.open(map, marker);
         }
 
         function setUserLocation() {
-            if (navigator.geolocation) {
-                // Mostrar mensaje de carga
-                console.log('Obteniendo ubicación...');
-                
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    var userPos = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    };
-                    map.setCenter(userPos);
-                    marker.setPosition(userPos);
-                    marker.setTitle('Tu ubicación actual');
-                    guardarUbicacion(userPos);
-                    console.log('Ubicación obtenida:', userPos);
-                }, function(error) {
-                    console.error('Error de geolocalización:', error);
-                    var errorMsg = '';
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            errorMsg = 'Permisos de ubicación denegados. Por favor, habilita los permisos de ubicación en la configuración de la app.';
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            errorMsg = 'Información de ubicación no disponible. Verifica que el GPS esté activado.';
-                            break;
-                        case error.TIMEOUT:
-                            errorMsg = 'Tiempo de espera agotado. Intentando de nuevo...';
-                            // Intentar de nuevo automáticamente
-                            setTimeout(setUserLocation, 2000);
-                            return;
-                        default:
-                            errorMsg = 'Error desconocido al obtener ubicación.';
-                            break;
-                    }
-                    alert(errorMsg);
-                    
-                    // Como fallback, usar una ubicación por defecto (CDMX)
-                    var fallbackPos = { lat: 19.432608, lng: -99.133209 };
-                    map.setCenter(fallbackPos);
-                    marker.setPosition(fallbackPos);
-                    marker.setTitle('Ubicación por defecto (CDMX)');
-                }, {
-                    enableHighAccuracy: true,
-                    timeout: 15000, // Aumentar timeout a 15 segundos
-                    maximumAge: 60000 // Aceptar ubicación de hasta 1 minuto de antigüedad
-                });
-            } else {
-                alert('Geolocalización no soportada por este dispositivo');
-                // Usar ubicación por defecto
-                var fallbackPos = { lat: 19.432608, lng: -99.133209 };
-                map.setCenter(fallbackPos);
-                marker.setPosition(fallbackPos);
-                marker.setTitle('Ubicación por defecto (CDMX)');
-            }
+            // Función legacy, redirigir a la nueva
+            obtenerUbicacionConFallback();
         }
 
         function guardarUbicacion(pos) {

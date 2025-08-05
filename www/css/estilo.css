@@ -74,6 +74,16 @@ button {
   border-bottom: 1px solid #ccc;
   margin-bottom: 20px;
 }
+
+/* Configuración específica para la sección de contactos */
+#contactos-section {
+  display: block !important; /* Cambiar a block para layout vertical */
+  overflow-x: visible !important; /* Quitar scroll horizontal */
+  overflow-y: auto !important; /* Permitir scroll vertical si es necesario */
+  max-height: 400px; /* Altura máxima para scroll vertical */
+  padding: 15px 0;
+}
+
 .item-btn {
   min-width: 120px;
   padding: 15px;
@@ -100,6 +110,66 @@ button {
   align-items: center;
   justify-content: center;
   height: 60px;
+  margin-bottom: 15px; /* Espacio después del botón */
+}
+
+/* Botón + específico para contactos */
+#contactos-section .add-btn {
+  margin: 0 auto 20px auto; /* Centrado y espacio abajo */
+  display: block;
+}
+
+/* Área del botón agregar contacto */
+.agregar-contacto-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  background: #f9f9f9;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  border: 2px dashed #ddd;
+}
+
+.add-btn-label {
+  margin-top: 10px;
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Separador entre botón y contactos */
+.separador-contactos {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #ddd, transparent);
+  margin: 20px 0;
+}
+
+/* Estilos para la sección de contactos existentes */
+.contactos-existentes {
+  width: 100%;
+}
+
+.titulo-contactos-existentes {
+  font-size: 18px;
+  color: #666;
+  margin: 10px 0 15px 0;
+  text-align: left;
+  font-weight: 600;
+}
+
+/* Mejorar el botón + en el área de contactos */
+.agregar-contacto-area .add-btn {
+  margin: 0; /* Quitar margin del botón dentro del área */
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  transform: scale(1);
+  transition: all 0.3s ease;
+}
+
+.agregar-contacto-area .add-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
 }
 .modal {
   display: none;
@@ -146,6 +216,30 @@ h1 {
   list-style: none;
   padding: 0;
   margin: 0;
+  width: 100%;
+  display: block !important; /* Asegurar que es un bloque */
+}
+
+.lista-contactos li {
+  display: block !important; /* Cada contacto es un bloque */
+  width: 100%;
+  margin-bottom: 12px; /* Más espacio entre contactos */
+}
+
+/* Mejorar el estilo de cada contacto */
+.item-contacto {
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.item-contacto:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 #pantalla-inicial {
@@ -839,25 +933,60 @@ html, body {
 .item-contacto {
   background: white;
   border-radius: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   border: 1px solid #e0e0e0;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.item-contacto:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .contacto-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
+  padding: 16px 20px;
   background: white;
-  gap: 10px;
+  gap: 15px;
+  min-height: 65px;
+}
+
+.contacto-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0; /* Permite que el texto se ajuste */
 }
 
 .nombre-contacto {
-  font-weight: 600;
-  color: #333;
-  font-size: 16px;
-  flex: 1;
+  font-weight: 600 !important;
+  color: #333 !important;
+  font-size: 16px !important;
+  display: block !important;
+  margin-bottom: 4px !important;
+  line-height: 1.2;
+  word-wrap: break-word;
+  width: 100%;
+}
+
+.relacion-contacto {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  margin-top: 2px;
+  display: block;
+}
+
+.botones-contacto {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0; /* Los botones no se reducen */
 }
 
 .btn-llamar {

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Geolocalización</title>
+    <link rel="stylesheet" href="css/estilo.css">
+    <style>
+        .debug-container {
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .coords {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🔍 Debug Geolocalización</h1>
+        
+        <div id="status" class="status info">
+            Esperando prueba de geolocalización...
+        </div>
+        
+        <div class="coords" id="results">
+            <h3>Resultados:</h3>
+            <div id="coords-display">No hay coordenadas disponibles</div>
+        </div>
+        
+        <button onclick="testGeolocation()">📍 Probar Geolocalización</button>
+        <button onclick="testPermissions()">🔒 Verificar Permisos</button>
+        <button onclick="testGoogleMaps()">🗺️ Probar Google Maps</button>
+        <button onclick="forceLocationRefresh()">🔄 Forzar Actualización</button>
+        <button onclick="testDeviceInfo()">📱 Info del Dispositivo</button>
+        <button onclick="clearResults()">🧹 Limpiar</button>
+        
+        <div id="log" style="background: #000; color: #0f0; padding: 10px; margin-top: 20px; border-radius: 5px; font-family: monospace; height: 200px; overflow-y: scroll;">
+            <div>📱 Log de debug iniciado...</div>
+        </div>
+    </div>
+
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            log(`Status: ${message}`);
+        }
+
+        function testPermissions() {
+            log('🔒 Verificando permisos...');
+            updateStatus('Verificando permisos...', 'info');
+            
+            if (navigator.permissions && navigator.permissions.query) {
+                navigator.permissions.query({name: 'geolocation'}).then(function(result) {
+                    log(`Permiso de geolocalización: ${result.state}`);
+                    if (result.state === 'granted') {
+                        updateStatus('✅ Permisos concedidos', 'success');
+                    } else if (result.state === 'denied') {
+                        updateStatus('❌ Permisos denegados', 'error');
+                    } else {
+                        updateStatus('⚠️ Permisos pendientes', 'info');
+                    }
+                }).catch(function(error) {
+                    log(`Error verificando permisos: ${error.message}`);
+                    updateStatus('Error verificando permisos', 'error');
+                });
+            } else {
+                log('API de permisos no disponible');
+                updateStatus('API de permisos no disponible', 'error');
+            }
+        }
+
+        function testGeolocation() {
+            log('📍 Iniciando prueba de geolocalización...');
+            updateStatus('Obteniendo ubicación...', 'info');
+            
+            if (!navigator.geolocation) {
+                log('❌ Geolocalización no soportada');
+                updateStatus('❌ Geolocalización no soportada', 'error');
+                return;
+            }
+
+            // Primero verificar si estamos en Cordova
+            const isCordova = typeof cordova !== 'undefined';
+            log(`📱 Entorno: ${isCordova ? 'Cordova/PhoneGap' : 'Navegador web'}`);
+
+            // Configuración más agresiva para ubicación real
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 60000, // Aumentar a 60 segundos
+                maximumAge: 0    // No usar caché
+            };
+
+            log('Configuración: enableHighAccuracy=true, timeout=60s, maximumAge=0');
+            log('🔄 Intentando obtener ubicación (esto puede tomar hasta 60 segundos)...');
+            
+            // Usar watchPosition en lugar de getCurrentPosition para mejor precisión
+            const watchId = navigator.geolocation.watchPosition(
+                function(position) {
+                    navigator.geolocation.clearWatch(watchId);
+                    log('✅ Ubicación obtenida exitosamente');
+                    const coords = position.coords;
+                    
+                    const coordsDisplay = document.getElementById('coords-display');
+                    coordsDisplay.innerHTML = `
+                        <strong>Coordenadas obtenidas:</strong><br>
+                        📍 Latitud: ${coords.latitude}<br>
+                        📍 Longitud: ${coords.longitude}<br>
+                        🎯 Precisión: ${Math.round(coords.accuracy)} metros<br>
+                        ⏰ Timestamp: ${new Date(position.timestamp).toLocaleString()}<br>
+                        ${coords.altitude ? `🏔️ Altitud: ${coords.altitude} m<br>` : ''}
+                        ${coords.altitudeAccuracy ? `🏔️ Precisión altitud: ${coords.altitudeAccuracy} m<br>` : ''}
+                        ${coords.heading ? `🧭 Dirección: ${coords.heading}°<br>` : ''}
+                        ${coords.speed ? `🚗 Velocidad: ${coords.speed} m/s<br>` : ''}
+                        <br><strong>Diagnóstico:</strong><br>
+                        🔋 Cordova: ${isCordova ? 'Sí' : 'No'}<br>
+                        📡 Fuente: ${coords.accuracy < 100 ? 'GPS' : 'Red/WiFi'}<br>
+                    `;
+                    
+                    // Verificar si no es la ubicación por defecto de CDMX
+                    const defaultLat = 19.432608;
+                    const defaultLng = -99.133209;
+                    const distance = calculateDistance(coords.latitude, coords.longitude, defaultLat, defaultLng);
+                    
+                    log(`📏 Distancia desde CDMX: ${distance.toFixed(2)} km`);
+                    
+                    if (distance < 1) { // Menos de 1km de la ubicación por defecto
+                        log('⚠️ ADVERTENCIA: Muy cerca de ubicación por defecto de CDMX');
+                        updateStatus('⚠️ Posible ubicación por defecto', 'error');
+                        coordsDisplay.innerHTML += `<br><span style="color: red;">⚠️ Distancia desde ubicación por defecto: ${distance.toFixed(2)} km</span>`;
+                    } else {
+                        log('✅ Coordenadas reales obtenidas (distancia significativa de CDMX)');
+                        updateStatus(`✅ Ubicación real (${Math.round(coords.accuracy)}m precisión)`, 'success');
+                        coordsDisplay.innerHTML += `<br><span style="color: green;">✅ Ubicación real confirmada</span>`;
+                    }
+                    
+                    // Intentar geocodificación inversa
+                    reverseGeocode(coords.latitude, coords.longitude);
+                },
+                function(error) {
+                    navigator.geolocation.clearWatch(watchId);
+                    log(`❌ Error de geolocalización: ${error.message}`);
+                    log(`📊 Código de error: ${error.code}`);
+                    
+                    let errorMsg = '';
+                    let solution = '';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMsg = '❌ Permisos denegados';
+                            solution = 'Ve a Configuración > Apps > Proyecto6 > Permisos > Ubicación > Permitir';
+                            log('Causa: Usuario denegó permisos de ubicación');
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMsg = '❌ Ubicación no disponible';
+                            solution = 'Activa el GPS y verifica conexión a internet';
+                            log('Causa: Información de ubicación no disponible');
+                            break;
+                        case error.TIMEOUT:
+                            errorMsg = '❌ Tiempo agotado (60s)';
+                            solution = 'Prueba en exterior con mejor señal GPS';
+                            log('Causa: Timeout después de 60 segundos');
+                            break;
+                        default:
+                            errorMsg = '❌ Error desconocido';
+                            solution = 'Reinicia la app y vuelve a intentar';
+                            log(`Causa: Error desconocido (${error.code})`);
+                            break;
+                    }
+                    updateStatus(errorMsg, 'error');
+                    
+                    const coordsDisplay = document.getElementById('coords-display');
+                    coordsDisplay.innerHTML = `
+                        <strong>Error de geolocalización:</strong><br>
+                        ${errorMsg}<br><br>
+                        <strong>Solución sugerida:</strong><br>
+                        ${solution}
+                    `;
+                },
+                options
+            );
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radio de la Tierra en km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function reverseGeocode(lat, lng) {
+            log('🌍 Intentando geocodificación inversa...');
+            const geocoder = new google.maps.Geocoder();
+            const latlng = { lat: lat, lng: lng };
+            
+            geocoder.geocode({ location: latlng }, function(results, status) {
+                if (status === 'OK') {
+                    if (results[0]) {
+                        const address = results[0].formatted_address;
+                        log(`📍 Dirección: ${address}`);
+                        const coordsDisplay = document.getElementById('coords-display');
+                        coordsDisplay.innerHTML += `<br><strong>📍 Dirección:</strong><br>${address}`;
+                    }
+                } else {
+                    log(`❌ Error en geocodificación: ${status}`);
+                }
+            });
+        }
+
+        function testGoogleMaps() {
+            log('🗺️ Verificando Google Maps API...');
+            updateStatus('Verificando Google Maps...', 'info');
+            
+            if (typeof google !== 'undefined' && google.maps) {
+                log('✅ Google Maps API cargada correctamente');
+                updateStatus('✅ Google Maps API disponible', 'success');
+            } else {
+                log('❌ Google Maps API no cargada');
+                updateStatus('❌ Google Maps API no disponible', 'error');
+                
+                // Intentar cargar Google Maps
+                const script = document.createElement('script');
+                script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDPn7ufBV8nVIAKNS6LaS4fjdylKxWeEOs';
+                script.onload = function() {
+                    log('✅ Google Maps API cargada dinámicamente');
+                    updateStatus('✅ Google Maps API cargada', 'success');
+                };
+                script.onerror = function() {
+                    log('❌ Error cargando Google Maps API');
+                    updateStatus('❌ Error con API Key de Google Maps', 'error');
+                };
+                document.head.appendChild(script);
+            }
+        }
+
+        function forceLocationRefresh() {
+            log('🔄 Forzando actualización de ubicación...');
+            updateStatus('Forzando actualización...', 'info');
+            
+            // Limpiar cualquier caché de ubicación
+            if (navigator.geolocation.clearWatch) {
+                navigator.geolocation.clearWatch();
+            }
+            
+            // Configuración más agresiva
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 120000, // 2 minutos
+                maximumAge: 0,   // Sin caché
+                // Opciones específicas de Cordova si están disponibles
+                frequency: 1000,
+                enableLocationManager: true
+            };
+            
+            log('🔧 Usando configuración agresiva: timeout=120s, sin caché');
+            
+            let attempts = 0;
+            const maxAttempts = 3;
+            
+            function attemptLocation() {
+                attempts++;
+                log(`🔄 Intento ${attempts} de ${maxAttempts}`);
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        log(`✅ Éxito en intento ${attempts}`);
+                        const coords = position.coords;
+                        
+                        // Verificar calidad de la ubicación
+                        const quality = coords.accuracy < 50 ? '🟢 Excelente' : 
+                                      coords.accuracy < 100 ? '🟡 Buena' : 
+                                      coords.accuracy < 500 ? '🟠 Regular' : '🔴 Pobre';
+                        
+                        const coordsDisplay = document.getElementById('coords-display');
+                        coordsDisplay.innerHTML = `
+                            <strong>📡 Ubicación forzada (Intento ${attempts}):</strong><br>
+                            📍 Latitud: ${coords.latitude}<br>
+                            📍 Longitud: ${coords.longitude}<br>
+                            🎯 Precisión: ${Math.round(coords.accuracy)} metros ${quality}<br>
+                            ⏰ Timestamp: ${new Date(position.timestamp).toLocaleString()}<br>
+                            <br><strong>🔬 Análisis técnico:</strong><br>
+                            📊 Calidad señal: ${quality}<br>
+                            🛰️ Fuente probable: ${coords.accuracy < 100 ? 'GPS Satelital' : 'Torres celulares/WiFi'}<br>
+                            ⚡ Tiempo respuesta: ${attempts > 1 ? 'Múltiples intentos' : 'Primer intento'}<br>
+                        `;
+                        
+                        const distance = calculateDistance(coords.latitude, coords.longitude, 19.432608, -99.133209);
+                        coordsDisplay.innerHTML += `<br>📏 Distancia desde CDMX: ${distance.toFixed(2)} km`;
+                        
+                        if (distance < 5) {
+                            coordsDisplay.innerHTML += `<br><span style="color: orange;">⚠️ Muy cerca de CDMX - ¿Estás realmente en Ciudad de México?</span>`;
+                            updateStatus('⚠️ Ubicación cerca de CDMX detectada', 'error');
+                        } else {
+                            coordsDisplay.innerHTML += `<br><span style="color: green;">✅ Ubicación fuera de CDMX confirmada</span>`;
+                            updateStatus(`✅ Ubicación real confirmada (${distance.toFixed(0)}km de CDMX)`, 'success');
+                        }
+                        
+                        reverseGeocode(coords.latitude, coords.longitude);
+                    },
+                    function(error) {
+                        log(`❌ Error en intento ${attempts}: ${error.message}`);
+                        
+                        if (attempts < maxAttempts) {
+                            log(`🔄 Reintentando en 3 segundos...`);
+                            setTimeout(attemptLocation, 3000);
+                        } else {
+                            log('❌ Todos los intentos fallaron');
+                            updateStatus('❌ Fallo tras múltiples intentos', 'error');
+                            
+                            const coordsDisplay = document.getElementById('coords-display');
+                            coordsDisplay.innerHTML = `
+                                <strong>❌ Error persistente después de ${maxAttempts} intentos:</strong><br>
+                                Código: ${error.code}<br>
+                                Mensaje: ${error.message}<br><br>
+                                <strong>🛠️ Pasos para resolver:</strong><br>
+                                1. Ve a Configuración > Ubicación > Activar<br>
+                                2. Ve a Configuración > Apps > Proyecto6 > Permisos > Ubicación > Permitir siempre<br>
+                                3. Sal al exterior para mejor señal GPS<br>
+                                4. Reinicia la aplicación<br>
+                                5. Asegúrate que tienes conexión a internet<br>
+                            `;
+                        }
+                    },
+                    options
+                );
+            }
+            
+            attemptLocation();
+        }
+
+        function testDeviceInfo() {
+            log('📱 Obteniendo información del dispositivo...');
+            updateStatus('Analizando dispositivo...', 'info');
+            
+            const coordsDisplay = document.getElementById('coords-display');
+            let deviceInfo = '<strong>📱 Información del dispositivo:</strong><br>';
+            
+            // Información básica
+            deviceInfo += `🌐 User Agent: ${navigator.userAgent}<br>`;
+            deviceInfo += `📍 Geolocation API: ${navigator.geolocation ? '✅ Disponible' : '❌ No disponible'}<br>`;
+            deviceInfo += `📱 Cordova: ${typeof cordova !== 'undefined' ? '✅ Detectado' : '❌ No detectado'}<br>`;
+            deviceInfo += `🔌 Online: ${navigator.onLine ? '✅ Conectado' : '❌ Sin conexión'}<br>`;
+            
+            // Información de conexión
+            if (navigator.connection) {
+                deviceInfo += `📶 Tipo conexión: ${navigator.connection.effectiveType || navigator.connection.type || 'Desconocido'}<br>`;
+            }
+            
+            // Información de permisos
+            if (navigator.permissions) {
+                navigator.permissions.query({name: 'geolocation'}).then(function(result) {
+                    deviceInfo += `🔒 Permiso geolocalización: ${result.state}<br>`;
+                    coordsDisplay.innerHTML = deviceInfo;
+                }).catch(function() {
+                    deviceInfo += `🔒 Permiso geolocalización: No se puede verificar<br>`;
+                    coordsDisplay.innerHTML = deviceInfo;
+                });
+            } else {
+                deviceInfo += `🔒 API Permisos: No disponible<br>`;
+                coordsDisplay.innerHTML = deviceInfo;
+            }
+            
+            // Verificar plugins de Cordova
+            if (typeof cordova !== 'undefined') {
+                deviceInfo += `<br><strong>🔌 Plugins Cordova:</strong><br>`;
+                if (typeof device !== 'undefined') {
+                    deviceInfo += `📱 Modelo: ${device.model || 'Desconocido'}<br>`;
+                    deviceInfo += `🤖 Plataforma: ${device.platform || 'Desconocida'}<br>`;
+                    deviceInfo += `📊 Versión: ${device.version || 'Desconocida'}<br>`;
+                }
+            }
+            
+            coordsDisplay.innerHTML = deviceInfo;
+            log('📱 Información del dispositivo obtenida');
+        }
+
+        function clearResults() {
+            document.getElementById('coords-display').textContent = 'No hay coordenadas disponibles';
+            document.getElementById('log').innerHTML = '<div>📱 Log limpiado...</div>';
+            updateStatus('Log limpiado', 'info');
+        }
+
+        // Auto-verificar al cargar
+        window.onload = function() {
+            log('🚀 Página de debug cargada');
+            log('🔍 Iniciando diagnóstico automático...');
+            testPermissions();
+            testDeviceInfo();
+        };
+    </script>
+</body>
+</html>
