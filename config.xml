@@ -15,12 +15,15 @@
     <allow-intent href="sms:*" />
     <allow-intent href="mailto:*" />
     
-    <!-- Google Maps API Key (requerido por el plugin) -->
-    <preference name="GOOGLE_MAPS_ANDROID_API_KEY" value="AIzaSyDPn7ufBV8nVIAKNS6LaS4fjdylKxWeEOs" />
+        <!-- Configuraciones para Android 12+ -->
+    <preference name="AndroidLaunchMode" value="singleTask" />
+    <preference name="AndroidXEnabled" value="true" />
+    <preference name="GradlePluginKotlinEnabled" value="true" />
+    <preference name="GradlePluginKotlinCodeStyle" value="official" />
     
-    <!-- Android Configuration -->
+    <!-- Android Configuration - Compatible con Android 12+ -->
     <preference name="android-minSdkVersion" value="23" />
-    <preference name="android-targetSdkVersion" value="31" />
+    <preference name="android-targetSdkVersion" value="33" />
     <preference name="android-compileSdkVersion" value="35" />
     
     <!-- Geolocation preferences -->
@@ -28,30 +31,18 @@
     <preference name="location" value="true" />
     
     <platform name="android">
-        <!-- Permisos de ubicación -->
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
-            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-            <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-            <uses-feature android:name="android.hardware.location" android:required="true" />
-            <uses-feature android:name="android.hardware.location.gps" android:required="false" />
-            <uses-feature android:name="android.hardware.location.network" android:required="false" />
-        </edit-config>
-        
-        <!-- Otros permisos -->
+        <!-- Permisos básicos -->
         <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
             <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+            <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
             <uses-permission android:name="android.permission.CALL_PHONE" />
             <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
         </edit-config>
         
-        <!-- Configuración adicional para geolocalización -->
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyDPn7ufBV8nVIAKNS6LaS4fjdylKxWeEOs" />
-        </edit-config>
-        
-        <icon density="ldpi" src="www/img/logo.png" />
-        <icon density="mdpi" src="www/img/logo.png" />
-        <icon density="hdpi" src="www/img/logo.png" />
-        <icon density="xhdpi" src="www/img/logo.png" />
+        <icon density="ldpi" src="www/img/ClearPath.jpeg" />
+        <icon density="mdpi" src="www/img/ClearPath.jpeg" />
+        <icon density="hdpi" src="www/img/ClearPath.jpeg" />
+        <icon density="xhdpi" src="www/img/ClearPath.jpeg" />
     </platform>
 </widget>

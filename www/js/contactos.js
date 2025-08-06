@@ -39,26 +39,7 @@ function cargarContactosGuardados() {
   // Limpiar la lista antes de cargar (para evitar duplicados)
   listaContactos.innerHTML = '';
   
-  // Si no hay contactos, mostrar mensaje
-  if (contactosGuardados.length === 0) {
-    const mensajeVacio = document.createElement('div');
-    mensajeVacio.className = 'mensaje-vacio';
-    mensajeVacio.innerHTML = `
-      <div style="text-align: center; padding: 40px 20px; color: #666;">
-        <div style="font-size: 48px; margin-bottom: 16px;">📱</div>
-        <div style="font-size: 16px; margin-bottom: 8px;">No hay contactos guardados</div>
-        <div style="font-size: 14px; color: #999;">Agrega tu primer contacto usando el botón "+" arriba</div>
-      </div>
-    `;
-    listaContactos.appendChild(mensajeVacio);
-    return;
-  }
-  
-  console.log(`Cargando ${contactosGuardados.length} contactos`);
-  
   contactosGuardados.forEach((contacto, index) => {
-    console.log(`Creando contacto ${index + 1}: ${contacto.nombre} ${contacto.apellido || ''}`);
-    
     const li = document.createElement('li');
     li.className = 'item-contacto';
     li.setAttribute('data-id', contacto.id);
@@ -67,25 +48,14 @@ function cargarContactosGuardados() {
     const contactoContent = document.createElement('div');
     contactoContent.className = 'contacto-content';
     
-    // Crear contenedor para nombre con más información
-    const infoContainer = document.createElement('div');
-    infoContainer.className = 'contacto-info';
-    
-    const nombreCompleto = document.createElement('div');
-    nombreCompleto.className = 'nombre-contacto';
-    nombreCompleto.textContent = `${contacto.nombre} ${contacto.apellido || ''}`.trim();
-    
-    // Agregar relación si existe
-    if (contacto.relacion) {
-      const relacionSpan = document.createElement('div');
-      relacionSpan.className = 'relacion-contacto';
-      relacionSpan.textContent = contacto.relacion;
-      infoContainer.appendChild(relacionSpan);
-    }
-    
-    // Contenedor para botones
-    const botonesContainer = document.createElement('div');
-    botonesContainer.className = 'botones-contacto';
+    const nombreSpan = document.createElement('span');
+    nombreSpan.className = 'nombre-contacto';
+    nombreSpan.textContent = contacto.nombre;
+    nombreSpan.style.display = 'block';
+    nombreSpan.style.fontWeight = 'bold';
+    nombreSpan.style.fontSize = '16px';
+    nombreSpan.style.color = '#333';
+    nombreSpan.style.flex = '1';
     
     const btnLlamar = document.createElement('button');
     btnLlamar.className = 'btn-llamar';
@@ -106,19 +76,13 @@ function cargarContactosGuardados() {
       confirmarEliminacion(contacto.id);
     };
     
-    // Construir la estructura
-    infoContainer.appendChild(nombreCompleto);
-    botonesContainer.appendChild(btnLlamar);
-    botonesContainer.appendChild(btnEliminar);
-    
-    contactoContent.appendChild(infoContainer);
-    contactoContent.appendChild(botonesContainer);
+    contactoContent.appendChild(nombreSpan);
+    contactoContent.appendChild(btnLlamar);
+    contactoContent.appendChild(btnEliminar);
     li.appendChild(contactoContent);
     
     listaContactos.appendChild(li);
   });
-  
-  console.log(`Se cargaron ${contactosGuardados.length} contactos en la lista`);
 }
 
 // Función para confirmar eliminación de contacto
@@ -150,7 +114,9 @@ function eliminarContacto(contactoId, elemento = null) {
 document.addEventListener('DOMContentLoaded', function() {
   cargarContactosGuardados();
   
-  
+  // Función para limpiar contactos duplicados (opcional)
+  // Descomenta la siguiente línea si quieres limpiar duplicados automáticamente
+  // limpiarContactosDuplicados();
 });
 
 // Función opcional para limpiar contactos duplicados
