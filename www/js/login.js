@@ -1,3 +1,31 @@
+/* === login.js — CONFIG/API helper (REAL) === */
+const API_BASE = 'http://localhost:3000'; // navegador/PC
+// Emulador Android: 'http://10.0.2.2:3000'  |  Celular: 'http://TU.IP.LOCAL:3000'
+
+const ENDPOINTS = {
+  login: '/auth/login',
+  register: '/auth/register'
+};
+
+async function apiRequest(path, method='GET', body=null, token=null) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `${token}` } : {}) // sin 'Bearer'
+    },
+    body: body ? JSON.stringify(body) : null
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data?.msg || data?.message || data?.error || `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+
+
 // Sistema de autenticación completo
 class AuthManager {
     constructor() {
@@ -290,159 +318,123 @@ class AuthManager {
     }
 
     async handleLogin(e) {
-        e.preventDefault();
-        
-        const email = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value;
-        const rememberMe = document.getElementById('rememberMe').checked;
-        
-        // Validar campos
-        const emailValid = this.validateEmail(document.getElementById('loginEmail'), 'loginEmailError');
-        const passwordValid = this.validatePassword(document.getElementById('loginPassword'), 'loginPasswordError');
-        
-        if (!emailValid || !passwordValid) {
-            return;
-        }
-        
-        this.showLoader();
-        
-        try {
-            // Simular autenticación (en una app real esto sería una llamada al servidor)
-            await this.authenticateUser(email, password);
-            
-            // Crear sesión
-            const sessionData = {
-                email: email,
-                loginTime: new Date().toISOString(),
-                expiry: new Date(Date.now() + (rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000)).toISOString()
-            };
-            
-            localStorage.setItem('userSession', JSON.stringify(sessionData));
-            localStorage.setItem('rememberMe', rememberMe.toString());
-            
-            this.showSuccess();
-            
-            setTimeout(() => {
-                this.redirectToApp();
-            }, 2000);
-            
-        } catch (error) {
-            this.hideLoader();
-            this.showError('loginEmailError', 'Credenciales incorrectas. Verifica tu email y contraseña.');
-        }
-    }
+  e.preventDefault();
+  
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const rememberMe = document.getElementById('rememberMe').checked;
+
+  // Validar campos
+  const emailValid = this.validateEmail(document.getElementById('loginEmail'), 'loginEmailError');
+  const passwordValid = this.validatePassword(document.getElementById('loginPassword'), 'loginPasswordError');
+  if (!emailValid || !passwordValid) return;
+
+  this.showLoader();
+
+  try {
+    // ✅ Llamada REAL a la API (ya no simulado)
+    await this.authenticateUser(email, password);
+
+    // Crear sesión local (tu index.js la usa así)
+    const sessionData = {
+      email,
+      loginTime: new Date().toISOString(),
+      expiry: new Date(Date.now() + (rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000)).toISOString()
+    };
+    localStorage.setItem('userSession', JSON.stringify(sessionData));
+    localStorage.setItem('rememberMe', rememberMe.toString());
+
+    this.showSuccess();
+    setTimeout(() => this.redirectToApp(), 2000);
+
+  } catch (error) {
+    this.hideLoader();
+    // Muestra el mensaje que venga del servidor (msg/message) o el HTTP
+    this.showError('loginEmailError', error.message || 'Credenciales incorrectas.');
+  }
+}
+
 
     async handleRegister(e) {
-        e.preventDefault();
-        
-        const name = document.getElementById('registerName').value.trim();
-        const email = document.getElementById('registerEmail').value.trim();
-        const phone = document.getElementById('registerPhone').value.trim();
-        const password = document.getElementById('registerPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-        const acceptTerms = document.getElementById('acceptTerms').checked;
-        
-        // Validar todos los campos
-        const nameValid = this.validateName(document.getElementById('registerName'), 'registerNameError');
-        const emailValid = this.validateEmail(document.getElementById('registerEmail'), 'registerEmailError');
-        const phoneValid = this.validatePhone(document.getElementById('registerPhone'), 'registerPhoneError');
-        const passwordValid = this.validatePassword(document.getElementById('registerPassword'), 'registerPasswordError', true);
-        const confirmValid = this.validatePasswordConfirmation(document.getElementById('registerPassword'), document.getElementById('confirmPassword'), 'confirmPasswordError');
-        
-        if (!acceptTerms) {
-            alert('Debes aceptar los términos y condiciones para continuar');
-            return;
-        }
-        
-        if (!nameValid || !emailValid || !phoneValid || !passwordValid || !confirmValid) {
-            return;
-        }
-        
-        this.showLoader();
-        
-        try {
-            // Verificar si el email ya existe
-            if (this.emailExists(email)) {
-                this.hideLoader();
-                this.showError('registerEmailError', 'Este correo electrónico ya está registrado');
-                return;
-            }
-            
-            // Crear nueva cuenta
-            await this.createAccount(name, email, phone, password);
-            
-            // Crear sesión automáticamente
-            const sessionData = {
-                email: email,
-                name: name,
-                loginTime: new Date().toISOString(),
-                expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-            };
-            
-            localStorage.setItem('userSession', JSON.stringify(sessionData));
-            localStorage.setItem('rememberMe', 'false');
-            
-            this.showSuccess('¡Cuenta creada exitosamente!');
-            
-            setTimeout(() => {
-                this.redirectToApp();
-            }, 2000);
-            
-        } catch (error) {
-            this.hideLoader();
-            this.showError('registerEmailError', 'Error al crear la cuenta. Intenta nuevamente.');
-        }
-    }
+  e.preventDefault();
 
-    async authenticateUser(email, password) {
-        // Simular llamada al servidor
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                const users = this.getStoredUsers();
-                const user = users.find(u => u.email === email && u.password === password);
-                
-                if (user) {
-                    resolve(user);
-                } else {
-                    reject(new Error('Credenciales incorrectas'));
-                }
-            }, 1500);
-        });
-    }
+  const name = document.getElementById('registerName').value.trim();
+  const email = document.getElementById('registerEmail').value.trim();
+  const phone = document.getElementById('registerPhone').value.trim();
+  const password = document.getElementById('registerPassword').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  const acceptTerms = document.getElementById('acceptTerms').checked;
 
-    async createAccount(name, email, phone, password) {
-        // Simular creación de cuenta
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                const users = this.getStoredUsers();
-                const newUser = {
-                    id: Date.now(),
-                    name: name,
-                    email: email,
-                    phone: phone,
-                    password: password,
-                    createdAt: new Date().toISOString()
-                };
-                
-                users.push(newUser);
-                localStorage.setItem('registeredUsers', JSON.stringify(users));
-                resolve(newUser);
-            }, 1500);
-        });
-    }
+  // Validaciones
+  const nameValid = this.validateName(document.getElementById('registerName'), 'registerNameError');
+  const emailValid = this.validateEmail(document.getElementById('registerEmail'), 'registerEmailError');
+  const phoneValid = this.validatePhone(document.getElementById('registerPhone'), 'registerPhoneError');
+  const passwordValid = this.validatePassword(document.getElementById('registerPassword'), 'registerPasswordError', true);
+  const confirmValid = this.validatePasswordConfirmation(document.getElementById('registerPassword'), document.getElementById('confirmPassword'), 'confirmPasswordError');
 
-    getStoredUsers() {
-        try {
-            return JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-        } catch {
-            return [];
-        }
-    }
+  if (!acceptTerms) { alert('Debes aceptar los términos y condiciones para continuar'); return; }
+  if (!nameValid || !emailValid || !phoneValid || !passwordValid || !confirmValid) return;
 
-    emailExists(email) {
-        const users = this.getStoredUsers();
-        return users.some(user => user.email === email);
-    }
+  this.showLoader();
+
+  try {
+    // ✅ Llamada REAL a la API
+    await this.createAccount(name, email, phone, password);
+
+    // Crea la misma sesión local que ya esperaba tu index.js
+    const rememberMe = document.getElementById('rememberMe')?.checked ?? false;
+    const sessionData = {
+      email,
+      loginTime: new Date().toISOString(),
+      expiry: new Date(Date.now() + (rememberMe ? 30*24*60*60*1000 : 24*60*60*1000)).toISOString()
+    };
+    localStorage.setItem('userSession', JSON.stringify(sessionData));
+    localStorage.setItem('rememberMe', rememberMe.toString());
+
+    this.showSuccess();
+    setTimeout(() => this.redirectToApp(), 2000);
+
+  } catch (error) {
+    this.hideLoader();
+    // Ej: “El usuario ya existe”
+    this.showError('registerEmailError', error.message || 'Error al crear la cuenta.');
+  }
+}
+
+// --- LOGIN real ---
+async authenticateUser(email, password) {
+  const data = await apiRequest(ENDPOINTS.login, 'POST', { email, password });
+  if (data.token) localStorage.setItem('authToken', data.token);
+  return { email };
+}
+
+// --- REGISTRO real ---
+// Tu modelo exige: nombre, apellido, email, password
+async createAccount(name, email, phone, password) {
+  const partes = name.trim().split(/\s+/);
+  const nombre = partes.shift() || name;
+  const apellido = partes.join(' ') || '-';
+
+  const payload = { nombre, apellido, email, password, telefono: phone };
+  const data = await apiRequest(ENDPOINTS.register, 'POST', payload);
+  if (data.token) localStorage.setItem('authToken', data.token);
+  return true;
+}
+
+
+
+    //getStoredUsers() {
+        //try {
+        //    return JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      //  } catch {
+     //       return [];
+        //}
+   // }
+
+    //emailExists(email) {
+     //   const users = this.getStoredUsers();
+       //return users.some(user => user.email === email);
+    //}
 
     handleForgotPassword() {
         const email = prompt('Ingresa tu correo electrónico para recuperar tu contraseña:');
