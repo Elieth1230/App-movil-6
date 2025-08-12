@@ -111,47 +111,57 @@ document.getElementById('cerrar-modal-baston').addEventListener('click', () => {
 document.getElementById('form-configuracion').addEventListener('submit', function (e) {
   e.preventDefault();
   const nombreBaston = document.getElementById('nombre-baston').value;
-  const ssid = document.getElementById('ssid').value;
-  const password = document.getElementById('password').value;
+  const tipoBaston = document.getElementById('tipo-baston').value;
 
   // Oculta formulario y muestra loader
   this.style.display = 'none';
   document.getElementById('loader-vincular').style.display = 'block';
   document.getElementById('vincular-exito').style.display = 'none';
-  // Oculta la sección de batería y sensores
-  // document.getElementById('vincular-status').style.display = 'none';
 
-  // Simula vinculación con IoT (reemplaza por tu lógica real de vinculación)
-  simularVinculacionIoT(nombreBaston, ssid, password)
-    .then(({bateria, sensores}) => {
-      document.getElementById('loader-vincular').style.display = 'none';
-      document.getElementById('vincular-exito').style.display = 'block';
-
-  // Crea el botón del dispositivo (con localStorage para pasar el nombre)
-  const btn = document.createElement('button');
-  btn.className = 'item-btn';
-  btn.textContent = nombreBaston;
-  btn.onclick = function() {
-    // Guardar el nombre del dispositivo en localStorage
-    localStorage.setItem('nombreDispositivo', nombreBaston);
-    localStorage.setItem('bateriaDispositivo', bateria);
-    localStorage.setItem('sensoresDispositivo', sensores);
-    window.location.href = 'dispositivos.html';
+  // Crear objeto del bastón
+  const baston = {
+    id: Date.now(),
+    nombre: nombreBaston,
+    tipo: tipoBaston,
+    fechaCreacion: new Date().toISOString(),
+    bateria: Math.floor(Math.random() * 41) + 60, // Batería simulada 60-100%
+    estado: 'Activo'
   };
-  document.getElementById('lista-bastones').appendChild(btn);
 
-      setTimeout(() => {
-        document.getElementById('modal-baston').style.display = 'none';
-        document.getElementById('form-configuracion').style.display = 'block';
-        document.getElementById('vincular-exito').style.display = 'none';
-        document.getElementById('form-configuracion').reset();
-      }, 2000);
-    })
-    .catch(() => {
-      document.getElementById('loader-vincular').style.display = 'none';
-      alert('Error al vincular con el bastón. Intenta de nuevo.');
+  // Guardar en localStorage
+  let bastones = JSON.parse(localStorage.getItem('bastones') || '[]');
+  bastones.push(baston);
+  localStorage.setItem('bastones', JSON.stringify(bastones));
+
+  // Simular guardado
+  setTimeout(() => {
+    document.getElementById('loader-vincular').style.display = 'none';
+    document.getElementById('vincular-exito').style.display = 'block';
+
+    // Crear el botón del dispositivo
+    const btn = document.createElement('button');
+    btn.className = 'item-btn';
+    btn.textContent = `${nombreBaston} (${tipoBaston})`;
+    btn.onclick = function() {
+      // Guardar el bastón seleccionado en localStorage
+      localStorage.setItem('bastonSeleccionado', JSON.stringify(baston));
+      window.location.href = 'dispositivos.html';
+    };
+    document.getElementById('lista-bastones').appendChild(btn);
+
+    // Anunciar éxito con TalkBack
+    if (window.talkBack) {
+      window.talkBack.announceAction(`Bastón ${nombreBaston} de tipo ${tipoBaston} guardado exitosamente`);
+    }
+
+    setTimeout(() => {
+      document.getElementById('modal-baston').style.display = 'none';
       document.getElementById('form-configuracion').style.display = 'block';
-    });
+      document.getElementById('vincular-exito').style.display = 'none';
+      document.getElementById('form-configuracion').reset();
+    }, 2000);
+  }, 1500);
+});
 
   // Función para mostrar el detalle del bastón
   function mostrarDetalleBaston(nombre, bateria, sensores) {
@@ -163,15 +173,21 @@ document.getElementById('form-configuracion').addEventListener('submit', functio
     // ul.appendChild(...)
     document.getElementById('modal-detalle').style.display = 'flex';
   }
-});
 
-// Simulación de vinculación con IoT (reemplaza por llamada real)
-function simularVinculacionIoT(nombre, ssid, password) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      // Simula éxito y datos
-      resolve({ bateria: Math.floor(Math.random()*41)+60, sensores: 'OK' });
-    }, 2500); // Simula espera de 2.5s
+// Función para cargar bastones guardados al iniciar la aplicación
+function cargarBastones() {
+  const bastones = JSON.parse(localStorage.getItem('bastones') || '[]');
+  const listaBastones = document.getElementById('lista-bastones');
+  
+  bastones.forEach(baston => {
+    const btn = document.createElement('button');
+    btn.className = 'item-btn';
+    btn.textContent = `${baston.nombre} (${baston.tipo})`;
+    btn.onclick = function() {
+      localStorage.setItem('bastonSeleccionado', JSON.stringify(baston));
+      window.location.href = 'dispositivos.html';
+    };
+    listaBastones.appendChild(btn);
   });
 }
 
@@ -180,6 +196,7 @@ function simularVinculacionIoT(nombre, ssid, password) {
 document.addEventListener('DOMContentLoaded', function() {
   checkAuthSession();
   initLogout();
+  cargarBastones(); // Cargar bastones guardados
 });
 
 function checkAuthSession() {

@@ -7,17 +7,25 @@
   <link rel="stylesheet" href="css/estilo.css" />
 </head>
 <body>
+  <button onclick="window.location.href='index.html'" style="position: fixed; top: 10px; left: 10px; padding: 10px; background: #4caf50; color: white; border: none; border-radius: 5px; cursor: pointer;">← Regresar</button>
+  
   <h2>Configurar nuevo bastón</h2>
   <form id="form-configuracion">
     <label for="nombre-baston">Nombre del bastón:</label><br>
     <input type="text" id="nombre-baston" name="nombre-baston" required><br><br>
-    <label for="ssid">WiFi SSID:</label><br>
-    <input type="text" id="ssid" name="ssid" required><br><br>
-    <label for="password">Contraseña WiFi:</label><br>
-    <input type="password" id="password" name="password" required><br><br>
-    <button type="submit">Configurar y conectar</button>
+    
+    <label for="tipo-baston">Tipo del bastón:</label><br>
+    <select id="tipo-baston" name="tipo-baston" required>
+      <option value="">Selecciona el tipo</option>
+      <option value="blanco">Blanco</option>
+      <option value="verde">Verde</option>
+      <option value="blanco-con-rojo">Blanco con rojo</option>
+    </select><br><br>
+    
+    <button type="submit">Guardar bastón</button>
   </form>
   <div id="mensaje-configuracion"></div>
+  <script src="js/talkback.js"></script>
   <script src="js/configurar.js"></script>
 </body>
 </html>

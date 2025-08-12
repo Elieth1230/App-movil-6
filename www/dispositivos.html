@@ -90,22 +90,32 @@
     
     // Cargar datos del dispositivo desde localStorage
     function cargarDatosDispositivo() {
-      const nombreDispositivo = localStorage.getItem('nombreDispositivo');
-      const bateriaDispositivo = localStorage.getItem('bateriaDispositivo');
-      const sensoresDispositivo = localStorage.getItem('sensoresDispositivo');
+      const bastonSeleccionado = localStorage.getItem('bastonSeleccionado');
       
-      if (nombreDispositivo) {
-        document.getElementById('nombre-dispositivo').textContent = nombreDispositivo;
-        document.getElementById('detalle-nombre').textContent = nombreDispositivo;
-      }
-      
-      if (bateriaDispositivo) {
-        document.getElementById('detalle-bateria').textContent = bateriaDispositivo + '%';
-      }
-      
-      if (sensoresDispositivo) {
-        document.getElementById('detalle-estado_ultra').textContent = sensoresDispositivo;
-        document.getElementById('detalle-estado_buzzer').textContent = sensoresDispositivo;
+      if (bastonSeleccionado) {
+        const baston = JSON.parse(bastonSeleccionado);
+        document.getElementById('nombre-dispositivo').textContent = `${baston.nombre} (${baston.tipo})`;
+        document.getElementById('detalle-bateria').textContent = baston.bateria + '%';
+        document.getElementById('detalle-estado_ultra').textContent = baston.estado;
+        document.getElementById('detalle-estado_buzzer').textContent = baston.estado;
+      } else {
+        // Fallback para compatibilidad con el formato anterior
+        const nombreDispositivo = localStorage.getItem('nombreDispositivo');
+        const bateriaDispositivo = localStorage.getItem('bateriaDispositivo');
+        const sensoresDispositivo = localStorage.getItem('sensoresDispositivo');
+        
+        if (nombreDispositivo) {
+          document.getElementById('nombre-dispositivo').textContent = nombreDispositivo;
+        }
+        
+        if (bateriaDispositivo) {
+          document.getElementById('detalle-bateria').textContent = bateriaDispositivo + '%';
+        }
+        
+        if (sensoresDispositivo) {
+          document.getElementById('detalle-estado_ultra').textContent = sensoresDispositivo;
+          document.getElementById('detalle-estado_buzzer').textContent = sensoresDispositivo;
+        }
       }
     }
     

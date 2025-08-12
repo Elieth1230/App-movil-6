@@ -262,6 +262,14 @@ h1 {
   border-radius: 8px;
   margin: 5px 0;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.swipe-container {
+  position: relative;
+  width: 100%;
 }
 
 .nombre-contacto {
@@ -269,6 +277,14 @@ h1 {
   font-weight: bold !important;
   font-size: 16px !important;
   color: #333 !important;
+  display: block !important;
+  margin-right: 10px;
+}
+
+.telefono-contacto {
+  flex: 1;
+  font-size: 14px !important;
+  color: #666 !important;
   display: block !important;
   margin-right: 10px;
 }
@@ -285,11 +301,42 @@ h1 {
 .btn-llamar {
   background: #4CAF50;
   color: white;
+  flex-shrink: 0;
+}
+
+.btn-llamar:hover {
+  background: #45a049;
 }
 
 .btn-eliminar {
   background: #f44336;
   color: white;
+}
+
+/* Botón de eliminar oculto para swipe */
+.btn-eliminar-hidden {
+  position: absolute;
+  right: -80px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #f44336;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: right 0.3s ease;
+  z-index: 10;
+}
+
+.swipe-open .btn-eliminar-hidden {
+  right: 10px;
+}
+
+/* Animación para el swipe */
+.contacto-content.swipe-open {
+  background: linear-gradient(to left, #ffebee 0%, #fff 80%);
 }
 
 /* TalkBack Button */
@@ -341,6 +388,17 @@ h1 {
   font-size: 1em;
   border: 1px solid #ccc;
   border-radius: 8px;
+}
+
+.modal-content select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: white;
+  cursor: pointer;
 }
 
 .modal-content button {

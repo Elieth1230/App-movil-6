@@ -44,7 +44,7 @@
           <input type="text" id="nombre" placeholder="Nombre" required />
           <input type="text" id="apellido" placeholder="Apellido" required />
           <input type="text" id="relacion" placeholder="Relación" required />
-          <input type="tel" id="telefono" placeholder="Teléfono" required />
+          <input type="tel" id="telefono" placeholder="Teléfono (ej: 5551234567)" required pattern="[0-9\+\-\(\)\s]+" maxlength="20" />
           <button type="submit">Guardar contacto</button>
         </form>
       </div>
@@ -57,17 +57,23 @@
         <h3>Nuevo Bastón</h3>
         <form id="form-configuracion">
           <input type="text" id="nombre-baston" placeholder="Nombre del bastón" required />
-          <input type="text" id="ssid" placeholder="WiFi SSID" required />
-          <input type="password" id="password" placeholder="Contraseña WiFi" required />
+          
+          <select id="tipo-baston" required>
+            <option value="">Selecciona el tipo</option>
+            <option value="blanco">Blanco</option>
+            <option value="verde">Verde</option>
+            <option value="blanco-con-rojo">Blanco con rojo</option>
+          </select>
+          
           <button type="submit">Guardar bastón</button>
         </form>
         <div id="loader-vincular" style="display:none; margin: 30px 0;">
           <div class="loader"></div>
-          <div style="margin-top:10px; color:#888;">Vinculando con el bastón...</div>
+          <div style="margin-top:10px; color:#888;">Guardando bastón...</div>
         </div>
         <div id="vincular-exito" style="display:none; margin: 30px 0;">
           <div style="font-size: 3em; color: #4caf50;">✅</div>
-          <div style="margin-top:10px; color:#4caf50; font-weight:bold;">¡Conexión exitosa!</div>
+          <div style="margin-top:10px; color:#4caf50; font-weight:bold;">¡Bastón guardado exitosamente!</div>
         </div>
       </div>
     </div>
