@@ -1,3 +1,4 @@
+
 // Script principal para la gestión de contactos y dispositivos
 
 // Anunciar página principal cuando se carga
@@ -108,60 +109,84 @@ document.getElementById('cerrar-modal-baston').addEventListener('click', () => {
   document.getElementById('modal-baston').style.display = 'none';
 });
 
-document.getElementById('form-configuracion').addEventListener('submit', function (e) {
+// Engancha el handler al cargar la página
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('form-configuracion');
+  if (form) form.addEventListener('submit', vincularBastonSubmit);
+});
+
+// Handler REAL: guarda el bastón en Mongo usando la API
+// Handler REAL: guarda el bastón en Mongo usando la API (con fallback)
+async function vincularBastonSubmit(e) {
   e.preventDefault();
-  const nombreBaston = document.getElementById('nombre-baston').value;
-  const tipoBaston = document.getElementById('tipo-baston').value;
 
-  // Oculta formulario y muestra loader
-  this.style.display = 'none';
-  document.getElementById('loader-vincular').style.display = 'block';
-  document.getElementById('vincular-exito').style.display = 'none';
+  const nombreBaston = document.getElementById('nombre-baston').value.trim();
+  const tipoUI       = document.getElementById('tipo-baston').value; // "blanco" | "verde" | "blanco-con-rojo" o ya capitalizado
+  const token        = localStorage.getItem('authToken');
 
-  // Crear objeto del bastón
-  const baston = {
-    id: Date.now(),
-    nombre: nombreBaston,
-    tipo: tipoBaston,
-    fechaCreacion: new Date().toISOString(),
-    bateria: Math.floor(Math.random() * 41) + 60, // Batería simulada 60-100%
-    estado: 'Activo'
-  };
+  if (!token) {
+    alert('Tu sesión expiró, inicia sesión de nuevo.');
+    window.location.href = 'login.html';
+    return;
+  }
 
-  // Guardar en localStorage
-  let bastones = JSON.parse(localStorage.getItem('bastones') || '[]');
-  bastones.push(baston);
-  localStorage.setItem('bastones', JSON.stringify(bastones));
+  // Mapea al enum del backend
+  const mapTipo = { 'blanco':'Blanco', 'verde':'Verde', 'blanco-con-rojo':'Blanco y Rojo',
+                    'Blanco':'Blanco', 'Verde':'Verde', 'Blanco y Rojo':'Blanco y Rojo' };
+  const tipoBaston = mapTipo[tipoUI] || tipoUI;
 
-  // Simular guardado
-  setTimeout(() => {
-    document.getElementById('loader-vincular').style.display = 'none';
-    document.getElementById('vincular-exito').style.display = 'block';
+  // UI
+  const form   = document.getElementById('form-configuracion');
+  const loader = document.getElementById('loader-vincular');
+  const exito  = document.getElementById('vincular-exito');
+  if (form)   form.style.display = 'none';
+  if (loader) loader.style.display = 'block';
+  if (exito)  exito.style.display  = 'none';
 
-    // Crear el botón del dispositivo
-    const btn = document.createElement('button');
-    btn.className = 'item-btn';
-    btn.textContent = `${nombreBaston} (${tipoBaston})`;
-    btn.onclick = function() {
-      // Guardar el bastón seleccionado en localStorage
-      localStorage.setItem('bastonSeleccionado', JSON.stringify(baston));
-      window.location.href = 'dispositivos.html';
-    };
-    document.getElementById('lista-bastones').appendChild(btn);
+  const nuevoBaston = { nombre: nombreBaston || 'ClearPath', tipo: tipoBaston };
 
-    // Anunciar éxito con TalkBack
-    if (window.talkBack) {
-      window.talkBack.announceAction(`Bastón ${nombreBaston} de tipo ${tipoBaston} guardado exitosamente`);
+  try {
+    // 1) Intento con $push (la forma ideal)
+    await apiRequest('/usuarios/me', 'PUT', { $push: { bastones: nuevoBaston } }, token);
+  } catch (errPush) {
+    console.warn('PUT $push falló, probando fallback $set:', errPush?.message);
+
+    // 2) Fallback: leo el usuario, agrego en cliente y mando todo con $set
+    try {
+      const me = await apiRequest('/usuarios/me', 'GET', null, token);
+      const bastones = Array.isArray(me?.bastones) ? me.bastones.slice() : [];
+      bastones.push(nuevoBaston);
+      await apiRequest('/usuarios/me', 'PUT', { bastones }, token);
+    } catch (errSet) {
+      if (loader) loader.style.display = 'none';
+      if (form)   form.style.display = 'block';
+      console.error('Fallback $set falló:', errSet);
+      alert(errSet.message || 'No se pudo vincular el bastón.');
+      return;
     }
+  }
+
+  // Si llegó aquí, guardó con $push o con $set
+  try {
+    if (typeof cargarBastones === 'function') await cargarBastones();
+    if (loader) loader.style.display = 'none';
+    if (exito)  exito.style.display  = 'block';
 
     setTimeout(() => {
-      document.getElementById('modal-baston').style.display = 'none';
-      document.getElementById('form-configuracion').style.display = 'block';
-      document.getElementById('vincular-exito').style.display = 'none';
-      document.getElementById('form-configuracion').reset();
-    }, 2000);
-  }, 1500);
-});
+      const modal = document.getElementById('modal-baston');
+      if (modal) modal.style.display = 'none';
+      if (form) { form.style.display = 'block'; form.reset(); }
+      if (exito) exito.style.display = 'none';
+    }, 1500);
+  } catch (postErr) {
+    if (loader) loader.style.display = 'none';
+    if (form)   form.style.display = 'block';
+    console.error(postErr);
+    alert('Se guardó, pero no se pudo refrescar la lista.');
+  }
+}
+
+
 
   // Función para mostrar el detalle del bastón
   function mostrarDetalleBaston(nombre, bateria, sensores) {
@@ -175,21 +200,42 @@ document.getElementById('form-configuracion').addEventListener('submit', functio
   }
 
 // Función para cargar bastones guardados al iniciar la aplicación
-function cargarBastones() {
-  const bastones = JSON.parse(localStorage.getItem('bastones') || '[]');
-  const listaBastones = document.getElementById('lista-bastones');
-  
-  bastones.forEach(baston => {
-    const btn = document.createElement('button');
-    btn.className = 'item-btn';
-    btn.textContent = `${baston.nombre} (${baston.tipo})`;
-    btn.onclick = function() {
-      localStorage.setItem('bastonSeleccionado', JSON.stringify(baston));
-      window.location.href = 'dispositivos.html';
-    };
-    listaBastones.appendChild(btn);
-  });
+async function cargarBastones() {
+  const token = localStorage.getItem('authToken');
+  if (!token) { window.location.href = 'login.html'; return; }
+
+  const lista = document.getElementById('lista-bastones');
+  lista.innerHTML = '';
+
+  try {
+    const me = await apiRequest('/usuarios/me', 'GET', null, token);
+    const bastones = me?.bastones || [];
+
+    if (bastones.length === 0) {
+      const vacio = document.createElement('div');
+      vacio.style.cssText = 'padding:12px;color:#666;';
+      vacio.textContent = 'No tienes bastones asignados todavía.';
+      lista.appendChild(vacio);
+      return;
+    }
+
+    bastones.forEach(b => {
+      const btn = document.createElement('button');
+      btn.className = 'item-btn';
+      const bateriaTxt = (b?.estado?.bateria ?? null) !== null ? ` - ${b.estado.bateria}%` : '';
+      btn.textContent = `${b?.nombre || 'ClearPath'} (${b?.tipo || '—'})${bateriaTxt}`;
+      btn.onclick = () => {
+        localStorage.setItem('bastonSeleccionado', JSON.stringify(b));
+        window.location.href = 'dispositivos.html';
+      };
+      lista.appendChild(btn);
+    });
+  } catch (e) {
+    console.error(e);
+    alert('No se pudieron cargar tus dispositivos.');
+  }
 }
+
 
 // -------- AUTENTICACIÓN --------
 // Verificar sesión al cargar la página
@@ -225,6 +271,8 @@ function checkAuthSession() {
     
     // Sesión válida, mostrar información del usuario
     displayUserInfo(session);
+    cargarBastones();
+
     
   } catch (error) {
     console.error('Error al verificar sesión:', error);
@@ -257,6 +305,17 @@ function initLogout() {
     });
   }
 }
+
+async function eliminarBaston(idBaston) {
+  const token = localStorage.getItem('authToken');
+  try {
+    await apiRequest('/usuarios/me', 'PUT', { $pull: { bastones: { _id: idBaston } } }, token);
+    await cargarBastones();
+  } catch (e) {
+    alert(e.message || 'No se pudo eliminar el bastón');
+  }
+}
+
 
 function logout() {
   // Limpiar datos de sesión
