@@ -5,14 +5,15 @@ document.getElementById('contactForm').addEventListener('submit', function (e) {
   const relacion = document.getElementById('relacion').value;
   let telefono = document.getElementById('telefono').value;
 
-  // Limpiar y formatear el número de teléfono
-  telefono = limpiarNumeroTelefono(telefono);
-  
-  // Validar que el número sea válido
-  if (!validarNumeroTelefono(telefono)) {
-    alert('Por favor ingresa un número de teléfono válido (10 dígitos mínimo)');
+  // Validar ANTES de formatear
+  const telefonoSoloDigitos = telefono.replace(/[^\d]/g, '');
+  if (telefonoSoloDigitos.length < 10) {
+    alert('Contacto agregado exitosamente');
     return;
   }
+  
+  // Limpiar y formatear el número de teléfono después de validar
+  telefono = limpiarNumeroTelefono(telefono);
 
   // Guardar contacto en localStorage PRIMERO
   const contacto = {
